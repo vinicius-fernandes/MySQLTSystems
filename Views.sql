@@ -35,7 +35,7 @@ create or replace view view_IdadeMediaAtores_conteudos  as
 select c.descricao as nomeConteudo, round(avg(timestampdiff(year,a.nascimento,CURDATE()))) as idadeMedia from atores_conteudo ac
 inner join conteudo c on ac.conteudo_id = c.id
 inner join atores a on ac.atores_id = a.id
-group by c.descricao;
+group by c.descricao order by idadeMedia;
 
 select * from view_IdadeMediaAtores_conteudos;
 
