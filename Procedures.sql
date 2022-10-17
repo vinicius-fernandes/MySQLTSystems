@@ -1,22 +1,30 @@
-
-drop procedure if exists checkNome;
-drop procedure if exists checkExisteEmail;
-drop procedure if exists checkIdade;
 drop procedure if exists addCliente;
 drop procedure if exists addPais;
 drop procedure if exists addTipoAssinatura;
-drop procedure if exists checkExistePais;
-drop procedure if exists checkExisteTipoAssinaturas;
 drop procedure if exists alterCliente;
-drop procedure if exists checkTamanhoEmail;
 drop procedure if exists alterPais;
 drop procedure if exists alterTipoAssinatura;
+drop procedure if exists alterTipo;
+drop procedure if exists alterCategoria;
+drop procedure if exists alterAtor;
+drop procedure if exists alterCategoriasConteudo;
+drop procedure if exists alterAtoresConteudo;
+drop procedure if exists alterConteudo;
+drop procedure if exists alterClienteConteudo;
+drop procedure if exists alterLogsClientesConteudos;
+drop procedure if exists checkNome;
+drop procedure if exists checkExisteEmail;
+drop procedure if exists checkIdade;
+drop procedure if exists checkExistePais;
+drop procedure if exists checkExisteTipoAssinaturas;
+drop procedure if exists checkTamanhoEmail;
 drop procedure if exists checkExisteTipo;
 drop procedure if exists checkExisteConteudo;
 drop procedure if exists checkExisteAtor;
 drop procedure if exists checkExisteCategoria;
 drop procedure if exists removeTipo;
 drop procedure if exists removeCategoria;
+drop procedure if exists removeCategoriaConteudo;
 drop procedure if exists removeLogsClientesConteudos;
 drop procedure if exists removeAtoresConteudo;
 drop procedure if exists removePais;
@@ -525,6 +533,181 @@ procRemoveConteudo:begin
 end $$
 DELIMITER ;
 
+DELIMITER $$
+create procedure alterTipo(IN descricaoAntiga varchar(45),IN descricaoNova varchar(45))
+procAlterTipo:begin
+	declare codigoTipo int;
+    select id into codigoTipo from tipos where descricao = descricaoAntiga;
+    if codigoTipo is null then
+		select "Não foi possível identificar nenhum tipo com esse nome";
+        leave procAlterTipo;
+	end if;
+	call checkExisteTipo(descricaoNova,@existeTipo);
+    if @existeTipo then
+		if (select count(*) from tipos where id != codigoTipo and descricao = descricaoNova)>0 then
+			select "O tipo  já está cadastrado no sistema";
+			leave procAlterTipo;
+		end if;
+	end if;
+    update tipos set descricao = descricaoNova where id = codigoTipo;
+    select "Tipo atualizado com sucesso!";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure alterCategoria(IN descricaoAntiga varchar(45),IN descricaoNova varchar(45))
+procAlterCategoria:begin
+	declare codigoCategoria int;
+    select id into codigoCategoria from categorias where descricao = descricaoAntiga;
+    if codigoCategoria is null then
+		select "Não foi possível identificar nenhuma Categoria com esse nome";
+        leave procAlterCategoria;
+	end if;
+	call checkExisteCategoria(descricaoNova,@existeCategoria);
+    if @existeCategoria then
+		if (select count(*) from categorias where id != codigoCategoria and descricao = descricaoNova)>0 then
+			select "A Categoria  já está cadastrado no sistema";
+			leave procAlterCategoria;
+		end if;
+	end if;
+    update categorias set descricao = descricaoNova where id = codigoCategoria;
+    select "Categoria atualizada com sucesso!";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure alterAtor(IN nomeAntigo varchar(45),IN nomeNovo varchar(45),IN novoNascimento Datetime)
+procEditAtor: begin
+	declare codigoAtor int;
+    select id into codigoAtor from atores where nome = nomeAntigo;
+    
+    if codigoAtor is null then
+		select "Não foi possível identificar nenhum Ator com esse nome";
+        leave procEditAtor;
+	end if;
+    	call checkNome(nomeNovo,@nomeValido);
+    if not @nomeValido then
+		select "O nome inserido deve ser maior que 3 caracteres";
+        leave procEditAtor;
+    end if;    
+
+	call checkExisteAtor(nomeNovo,@existeAtor);
+    if @existeAtor then
+		if (select count(*) from Ators where id != codigoAtor and nome = nomeNovo)>0 then
+			select "O nome já está cadastrado no sistema";
+			leave procEditAtor;
+		end if;
+	end if;
+    
+	update atores set nome = nomeNovo,nascimento = novoNascimento where id = codigoAtor;
+    select "Ator atualizado com sucesso";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure alterCategoriasConteudo(in conteudo_id_antigo int,in categoria_id_antigo int, in categoria_id_novo int, in conteudo_id_novo int)
+procAlterCategoriasConteudo: begin
+	declare countExisteCategoriaConteudo int;
+    set countExisteCategoriaConteudo = (select count(*) from categorias_conteudo where categorias_id=categoria_id_novo and conteudo_id=conteudo_id_novo);
+    if countExisteCategoriaConteudo >0 then
+    select "Já a categoria já está associada com o conteúdo";
+    leave procAlterCategoriasConteudo;
+    end if;
+    update categorias_conteudo set categorias_id=categoria_id_novo,conteudo_id=conteudo_id_novo  where categorias_id=categoria_id_antigo and conteudo_id=conteudo_id_antigo;
+    select "Categoria conteudo atualizado com sucesso";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure alterAtoresConteudo(in conteudo_id_antigo int,in ator_id_antigo int, in ator_id_novo int, in conteudo_id_novo int)
+procAlterAtoresConteudo: begin
+	declare countExisteAtorConteudo int;
+    set countExisteAtorConteudo = (select count(*) from atores_conteudo where atores_id=ator_id_novo and conteudo_id=conteudo_id_novo);
+    if countExisteAtorConteudo >0 then
+    select "Já a ator já está associada com o conteúdo";
+    leave procAlterAtoresConteudo;
+    end if;
+    update atores_conteudo set atores_id=ator_id_novo,conteudo_id=conteudo_id_novo  where atores_id=ator_id_antigo and conteudo_id=conteudo_id_antigo;
+    select "Ator conteudo atualizado com sucesso";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure alterConteudo(IN descricaoAntigo varchar(45),IN descricaoNovo varchar(45),IN novaIdadeMin int, IN novoTipo int)
+procEditConteudo: begin
+	declare codigoConteudo int;
+    select id into codigoConteudo from conteudo where descricao = descricaoAntigo;
+    
+    if codigoConteudo is null then
+		select "Não foi possível identificar nenhum Conteudo com essa descricao";
+        leave procEditConteudo;
+	end if;
+	call checkNome(descricaoNovo,@descricaoValido);
+    if not @descricaoValido then
+		select "A descricao inserido deve ser maior que 3 caracteres";
+        leave procEditConteudo;
+    end if;    
+    
+
+	call checkExisteConteudo(descricaoNovo,@existeConteudo);
+    if @existeConteudo then
+		if (select count(*) from Conteudos where id != codigoConteudo and descricao = descricaoNovo)>0 then
+			select "A descricao já está cadastrado no sistema";
+			leave procEditConteudo;
+		end if;
+	end if;
+    
+	update conteudo set descricao = descricaoNovo,idade_minima=novaIdadeMin,tipos_conteudo_id=novoTipo where id = codigoConteudo;
+    select "Conteudo atualizado com sucesso";
+end $$
+DELIMITER ;
+
+
+DELIMITER $$
+create procedure alterClienteConteudo(in conteudo_id_antigo int,in cliente_id_antigo int, in cliente_id_novo int, in conteudo_id_novo int, in percentualNovo int, in notaNova int)
+procAlterClienteConteudo: begin
+	declare countExisteCategoriaConteudo int;
+    set countExisteCategoriaConteudo = (select count(*) from conteudo_cliente where clientes_id=cliente_id_novo and conteudo_id=conteudo_id_novo);
+    if countExisteCategoriaConteudo >0 then
+    select "O cliente já está associada com o conteúdo";
+    leave procAlterClienteConteudo;
+    end if;
+    update conteudo_cliente set clientes_id=cliente_id_novo,conteudo_id=conteudo_id_novo,percentual_assistido=percentualNovo,nota=notaNova  where clientes_id=cliente_id_antigo and conteudo_id=conteudo_id_antigo;
+    select "Cliente conteudo atualizado com sucesso";
+end $$
+DELIMITER ;
+
+
+DELIMITER $$
+create procedure removeCategoriaConteudo(IN categoria_id_remove int, IN conteudo_id_remove int)
+procRemoveCategoriaConteudo:begin
+	declare countCategoriaConteudo int;
+	set countCategoriaConteudo = (select count(*) from categorias_conteudo where categorias_id = categoria_id_remove  and conteudo_id=conteudo_id_remove);
+    if countCategoriaConteudo = 0 then
+		select "Não foi possível encontrar o CategoriaConteudo desejado";
+        leave procRemoveCategoriaConteudo;
+	end if;
+
+    
+    delete from categorias_conteudo where categorias_id = categoria_id_remove  and conteudo_id=conteudo_id_remove;
+    select "CategoriaConteudo removido com sucesso";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure alterLogsClientesConteudos(in conteudo_id_antigo int,in cliente_id_antigo int, in ccliente_id_novo int, in conteudo_id_novo int,in dataAntiga datetime,in dataNova dateTime,in mensagem varchar(255))
+procAlterLogsClientesConteudos: begin
+	declare countExisteLog int;
+    set countExisteLog = (select count(*) from logs_clientes_conteudos where clientes_id=cliente_id_antigo and conteudo_id=conteudo_id_antigo and data=dataAntiga );
+    if countExisteLog >1 or countExisteLog=0 then
+    select "O cliente está associado com o conteudo em mais de um log para a data ou não foi encontrado nenhum log com os parametros especificados";
+    leave procAlterLogsClientesConteudos;
+    end if;
+    update logs_clientes_conteudos set clientes_id=cliente_id_novo,conteudo_id=conteudo_id_novo,data=dataNova,descricao = mensagem   where categorias_id=categoria_id_antigo and conteudo_id=conteudo_id_antigo and data=dataAntiga;
+    select "Log atualizado com sucesso";
+end $$
+DELIMITER ;
+
 
 call addCliente("Vini","vin2@hotmail.com","17991750690","1998-02-02",1,1,true);
 call alterCliente("vin2@hotmail.com","vin12@hotmail.com","Vinici","2006-02-02",false);
@@ -548,3 +731,22 @@ call removeLogsClientesConteudos(1,1);
 call removeAtoresConteudo(1,1);
 call removeConteudoCliente(1,1);
 call removeConteudo("O chamado");
+call removeCategoriaConteudo(2,1);
+
+
+call alterTipo("Outros","Diversos");
+
+call alterCategoria("Esporte","Esportes");
+
+
+call alterAtor("Flávia","Roberta Carla","1996-02-02");
+
+call alterCategoriasConteudo(1,1,1,5);
+
+call alterAtoresConteudo(1,1,1,5);
+
+call alterConteudo("O Chamado","O Chamado 2",21,1);
+
+call alterClienteConteudo(1,3,1,4,100,10);
+
+
