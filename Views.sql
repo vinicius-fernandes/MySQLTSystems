@@ -78,3 +78,71 @@ right join tipos tip on c.tipos_conteudo_id = tip.id;
 select * from view_TiposConteudos;
 
 
+###
+# DQLs
+###
+
+# Max e subquery
+create or replace view clientesMaisVelhos as
+select nome, timestampdiff(year,nascimento,CURDATE()) as idade from clientes where
+timestampdiff(year,nascimento,CURDATE()) = (select max(timestampdiff(year,nascimento,CURDATE())) from clientes);
+
+select * from clientesMaisVelhos;
+
+# Min, subquery e now
+create or replace view clientesMaisNovos as
+select nome, timestampdiff(year,nascimento,NOW()) as idade from clientes where
+timestampdiff(year,nascimento,NOW()) = (select min(timestampdiff(year,nascimento,NOW())) from clientes);
+
+select * from clientesMaisNovos;
+
+# Like
+create or replace view logsDeAtualizacao as
+select * from logs_clientes_conteudos
+where descricao like '%Atualização de associação de conteudo e cliente novo percentual assistido:%';
+
+select * from logsDeAtualizacao;
+
+# Clientes jovens
+create or replace view clientesJovens as
+select nome, timestampdiff(year,nascimento,CURDATE()) as idade from clientes where
+timestampdiff(year,nascimento,CURDATE()) between 18 and 25;
+
+select * from clientesJovens;
+
+# Meses de nascimento dos clientes 
+create or replace view semestreNascimentoClientes as
+select nome,
+CASE 
+	WHEN DATE_FORMAT(nascimento,'%c') > 6 then 'Segundo Semestre'
+    ELSE 'Primeiro semestre'
+    END AS SemestreNascimento
+from clientes;
+
+select * from semestreNascimentoClientes;
+
+
+# Clientes que assistiram nos quais a média das notas é a cima de 7 para os conteudos
+create or replace view clientesQueDaoNotasBoas as 
+select n.nome as cliente, round(avg(ccl.nota),2) as mediaNotas from conteudo_cliente as ccl
+inner join clientes n on ccl.clientes_id = n.id
+group by n.nome
+having avg(ccl.nota)>7;
+
+select * from clientesQueDaoNotasBoas;
+
+#IF
+# Selecionar se o cliente é maior ou menor de idade
+create or replace view clientesMaiorOuMenorIdade as
+SELECT nome, IF(timestampdiff(year,nascimento,CURDATE())<18,"Menor de idade","Maior de idade") from clientes;
+
+select * from clientesMaiorOuMenorIdade;
+
+
+#OR
+create or replace view clientesBrasileirosOuArgentinos as
+select c.nome as cliente ,p.nome as pais from clientes c
+inner join paises p on c.paises_id = p.id
+where p.nome = 'Brasil' or p.nome='Brazil' or p.nome='Argentina';
+
+select * from clientesBrasileirosOuArgentinos;

@@ -319,4 +319,3 @@ call removePais("EUA");
 call removeTipoAssinatura("Cartão débito mensal");
 
 
-insert into 

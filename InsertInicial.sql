@@ -140,7 +140,7 @@ values
 ("Maria","maria@gmail.com","17921443876","1991-08-15",7,true,2,CURDATE()),
 ("Beatriz","bia@gmail.com","17911446876","1998-03-16",2,true,6,CURDATE()),
 ("Fernanda","nanda@gmail.com","12911643876","2002-03-17",2,true,8,CURDATE()),
-("Carla","carla@gmail.com","12921643876","1997-05-17",2,true,8,CURDATE()),
+("Carla","carla@gmail.com","12921643876","2007-05-17",2,true,9,CURDATE()),
 ("Julia","julia@gmail.com","17929643876","1997-05-17",10,true,10,CURDATE()),
 ("Vinicius","vini@gmail.com","17929624876","1998-11-19",10,true,10,CURDATE());
 
@@ -165,28 +165,6 @@ values
 (9,10,50,null),
 (10,10,100,7),
 (10,1,50,null);
-
-
-insert into logs_clientes_conteudos(data,descricao,clientes_id,conteudo_id)
-values
-(curdate(),"Associação de conteúdo e cliente",1,1),
-(curdate(),"Associação de conteúdo e cliente",1,2),
-(curdate(),"Associação de conteúdo e cliente",1,3),
-(curdate(),"Associação de conteúdo e cliente",2,1),
-(curdate(),"Associação de conteúdo e cliente",2,2),
-(curdate(),"Associação de conteúdo e cliente",3,3),
-(curdate(),"Associação de conteúdo e cliente",4,3),
-(curdate(),"Associação de conteúdo e cliente",4,4),
-(curdate(),"Associação de conteúdo e cliente",5,4),
-(curdate(),"Associação de conteúdo e cliente",6,5),
-(curdate(),"Associação de conteúdo e cliente",7,6),
-(curdate(),"Associação de conteúdo e cliente",7,7),
-(curdate(),"Associação de conteúdo e cliente",8,8),
-(curdate(),"Associação de conteúdo e cliente",8,9),
-(curdate(),"Associação de conteúdo e cliente",9,9),
-(curdate(),"Associação de conteúdo e cliente",9,10),
-(curdate(),"Associação de conteúdo e cliente",10,10),
-(curdate(),"Associação de conteúdo e cliente",10,1);
 
 
 
