@@ -34,3 +34,4 @@ BEGIN
 		(curdate(),textoLog,NEW.clientes_id,NEW.conteudo_id);
 END$
 DELIMITER ; 
+

@@ -11,9 +11,20 @@ drop procedure if exists alterCliente;
 drop procedure if exists checkTamanhoEmail;
 drop procedure if exists alterPais;
 drop procedure if exists alterTipoAssinatura;
+drop procedure if exists checkExisteTipo;
+drop procedure if exists checkExisteConteudo;
+drop procedure if exists checkExisteAtor;
+drop procedure if exists checkExisteCategoria;
+drop procedure if exists removeTipo;
+drop procedure if exists removeCategoria;
+drop procedure if exists removeLogsClientesConteudos;
+drop procedure if exists removeAtoresConteudo;
 drop procedure if exists removePais;
 drop procedure if exists removeTipoAssinatura;
 drop procedure if exists removeCliente;
+drop procedure if exists removeAtor;
+drop procedure if exists removeConteudoCliente;
+drop procedure if exists removeConteudo;
 
 DELIMITER $$
 create procedure checkTamanhoEmail(IN email varchar(50),OUT valido boolean)
@@ -80,6 +91,54 @@ begin
     select timestampdiff(year,dataParaChecar,curdate()) into idade;
     if idade >= 14 then
 		set valido = true; 
+    end if;
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure checkExisteAtor(IN nomeParaChecar varchar(45), out existe bool)
+begin
+    declare checkExisteAtor int default 0;
+	set existe = false;
+    select count(*) into checkExisteAtor from atores where nome = nomeParaChecar;
+    if checkExisteAtor > 0 then
+		set existe = true; 
+    end if;
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure checkExisteConteudo(IN nomeParaChecar varchar(45), out existe bool)
+begin
+    declare checkExisteConteudo int default 0;
+	set existe = false;
+    select count(*) into checkExisteConteudo from conteudo where descricao = nomeParaChecar;
+    if checkExisteConteudo > 0 then
+		set existe = true; 
+    end if;
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure checkExisteCategoria(IN nomeParaChecar varchar(45), out existe bool)
+begin
+    declare checkExisteCategoria int default 0;
+	set existe = false;
+    select count(*) into checkExisteCategoria from categorias where descricao = nomeParaChecar;
+    if checkExisteCategoria > 0 then
+		set existe = true; 
+    end if;
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure checkExisteTipo(IN nomeParaChecar varchar(45), out existe bool)
+begin
+    declare checkExisteTipo int default 0;
+	set existe = false;
+    select count(*) into checkExisteTipo from tipos where descricao = nomeParaChecar;
+    if checkExisteTipo > 0 then
+		set existe = true; 
     end if;
 end $$
 DELIMITER ;
@@ -239,11 +298,20 @@ DELIMITER $$
 create procedure removeCliente(IN emailParaRemover varchar(45))
 procRemoveCliente:begin
 	declare conteudoClienteCount int;
+    declare logsClienteCount int;
 	select count(*) into conteudoClienteCount from conteudo_cliente ccl
     inner join clientes cl on ccl.clientes_id = cl.id
     where cl.email = emailParaRemover;
+	select count(*) into logsClienteCount from logs_clientes_conteudos ccl
+    inner join clientes cl on ccl.clientes_id = cl.id
+    where cl.email = emailParaRemover;
+    
     if conteudoClienteCount >0 then
 		select "Não é possível remover o cliente com o email especificado por ele está associado com conteudos";
+		leave procRemoveCliente;
+    end if;
+	if logsClienteCount >0 then
+		select "Não é possível remover o cliente com o email especificado por ele está associado com logs";
 		leave procRemoveCliente;
     end if;
     	call checkExisteEmail(emailParaRemover,@existeEmail);
@@ -278,6 +346,50 @@ procRemovePais:begin
 end $$
 DELIMITER ;
 
+DELIMITER $$
+create procedure removeTipo(IN nomeTipo varchar(45))
+procRemoveTipo:begin 
+    declare conteudosTipo int;
+	call checkExisteTipo(nomeTipo,@existeTipo);
+    if not @existeTipo then
+		select "O tipo com o nome informado não existe";
+        leave procRemoveTipo;
+	end if;
+	set conteudosTipo = (select count(*) from conteudo c
+						inner join tipos t on c.tipos_conteudo_id = t.id
+                        where t.descricao = nomeTipo);
+	if conteudosTipo >0 then
+		select "Não é possível remover o tipo, há conteudos associados a ele";
+        leave procRemoveTipo;
+	end if;
+    
+    delete from tipos where descricao = nomeTipo;
+    select "Tipo deletado com sucesso";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure removeCategoria(IN nomeCategoria varchar(45))
+procRemoveCategoria:begin 
+    declare conteudosCategoria int;
+	call checkExisteCategoria(nomeCategoria,@existeCategoria);
+    if not @existeCategoria then
+		select "O Categoria com o nome informado não existe";
+        leave procRemoveCategoria;
+	end if;
+	set conteudosCategoria = (select count(*) from categorias_conteudo c
+						inner join categorias cat on c.categorias_id = cat.id
+                        where cat.descricao = nomeCategoria);
+	if conteudosCategoria >0 then
+		select "Não é possível remover o Categoria, há conteudos associados a ele";
+        leave procRemoveCategoria;
+	end if;
+    
+    delete from Categorias where descricao = nomeCategoria;
+    select "Categoria deletado com sucesso";
+end $$
+DELIMITER ;
+
 
 DELIMITER $$
 create procedure removeTipoAssinatura(IN nomeTipoAssinatura varchar(45))
@@ -300,22 +412,139 @@ procRemovePais:begin
 end $$
 DELIMITER ;
 
+
+DELIMITER $$
+create procedure removeAtor(IN nomeAtor varchar(45))
+procRemoveAtor:begin
+	declare countAtores int;
+    declare conteudosAtor int;
+	call checkExisteAtor(nomeAtor,@ExisteAtor);
+    if not @ExisteAtor then
+		select "Não foi possível encontrar o ator desejado";
+        leave procRemoveAtor;
+	end if;
+    set conteudosAtor = (select count(*) from atores_conteudo ac
+						inner join atores a on ac.atores_id = a.id
+                        where a.nome = nomeAtor);
+	if conteudosAtor >0 then
+		select "Não é possível remover o ator, há conteudos associados a ele";
+        leave procRemoveAtor;
+	end if;
+    
+    delete from atores where nome = nomeAtor;
+    select "Ator removido com sucesso";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure removeLogsClientesConteudos(IN cliente_id_remove int, IN conteudo_id_remove int)
+procRemoveLogsClientesConteudos:begin
+	declare countLogsClientesConteudos int;
+	set countLogsClientesConteudos = (select count(*) from logs_clientes_conteudos where clientes_id = cliente_id_remove and conteudo_id=conteudo_id_remove);
+    if countLogsClientesConteudos = 0 then
+		select "Não foi possível encontrar o LogsClientesConteudos desejado";
+        leave procRemoveLogsClientesConteudos;
+	end if;
+
+    
+    delete from logs_clientes_conteudos where clientes_id = cliente_id_remove and conteudo_id=conteudo_id_remove;
+    select "LogsClientesConteudos removido com sucesso";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure removeAtoresConteudo(IN ator_id_remove int, IN conteudo_id_remove int)
+procRemoveAtoresConteudo:begin
+	declare countAtoresConteudo int;
+	set countAtoresConteudo = (select count(*) from atores_conteudo where atores_id = ator_id_remove and conteudo_id=conteudo_id_remove);
+    if countAtoresConteudo = 0 then
+		select "Não foi possível encontrar o AtoresConteudo desejado";
+        leave procRemoveAtoresConteudo;
+	end if;
+
+    
+    delete from atores_conteudo where atores_id = ator_id_remove  and conteudo_id=conteudo_id_remove;
+    select "AtoresConteudo removido com sucesso";
+end $$
+DELIMITER ;
+
+DELIMITER $$
+create procedure removeConteudoCliente(IN cliente_id_remove int, IN conteudo_id_remove int)
+procRemoveConteudoCliente:begin
+	declare countConteudoCliente int;
+	set countConteudoCliente = (select count(*) from conteudo_cliente where clientes_id = cliente_id_remove  and conteudo_id=conteudo_id_remove);
+    if countConteudoCliente = 0 then
+		select "Não foi possível encontrar o ConteudoCliente desejado";
+        leave procRemoveConteudoCliente;
+	end if;
+
+    
+    delete from conteudo_cliente where clientes_id = cliente_id_remove  and conteudo_id=conteudo_id_remove;
+    select "ConteudoCliente removido com sucesso";
+end $$
+DELIMITER ;
+
+
+DELIMITER $$
+create procedure removeConteudo(IN nomeConteudo varchar(45))
+procRemoveConteudo:begin
+	declare countAtores int;
+    declare countClientes int;
+    declare countCategorias int;
+	call checkExisteConteudo(nomeConteudo,@ExisteConteudo);
+    if not @ExisteConteudo then
+		select "Não foi possível encontrar o Conteudo desejado";
+        leave procRemoveConteudo;
+	end if;
+    set countAtores = (select count(*) from atores_conteudo ac
+						inner join conteudo c on ac.conteudo_id = c.id
+                        where c.descricao = nomeConteudo);
+	if countAtores >0 then
+		select "Não é possível remover o Conteudo, há atores associados a ele";
+        leave procRemoveConteudo;
+	end if;
+    set countClientes = (select count(*) from conteudo_cliente cc
+						inner join conteudo c on cc.conteudo_id = c.id
+                        where c.descricao = nomeConteudo);
+	if countClientes >0 then
+		select "Não é possível remover o Conteudo, há clientes associados a ele";
+        leave procRemoveConteudo;
+	end if;
+
+    set countCategorias = (select count(*) from categorias_conteudo cc
+						inner join conteudo c on cc.conteudo_id = c.id
+                        where c.descricao = nomeConteudo);
+	if countCategorias >0 then
+		select "Não é possível remover o Conteudo, há categorias associados a ele";
+        leave procRemoveConteudo;
+	end if;
+
+    
+    delete from conteudo where descricao = nomeConteudo;
+    select "Conteudo removido com sucesso";
+end $$
+DELIMITER ;
+
+
 call addCliente("Vini","vin2@hotmail.com","17991750690","1998-02-02",1,1,true);
+call alterCliente("vin2@hotmail.com","vin12@hotmail.com","Vinici","2006-02-02",false);
+call removeCliente("duda@gmail.com");
 
-call addPais("EUA");
-
-call addTipoAssinatura("Cartão de débito");
-
-call alterCliente("vin3@hotmail.com","vin12@hotmail.com","Vinici","2006-02-02",false);
-
+call addPais("Argélia");
+call removePais("Argélia");
 call alterPais("Brasil","Brazil");
 
+call addTipoAssinatura("Cartão de débito");
 call alterTipoAssinatura("Boleto mensal","Cartão débito mensal");
-
-call removeCliente("vin3231@hotmail.com");
-
-call removePais("EUA");
-
 call removeTipoAssinatura("Cartão débito mensal");
 
+call removeAtor("Roberta");
 
+call removeTipo("Videoclipe");
+
+call removeCategoria("Romance");
+
+call removeLogsClientesConteudos(1,1);
+call removeAtoresConteudo(1,1);
+call removeConteudoCliente(1,1);
+call removeConteudo("O chamado");
