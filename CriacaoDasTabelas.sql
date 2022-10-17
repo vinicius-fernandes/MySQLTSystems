@@ -157,3 +157,25 @@ CREATE TABLE IF NOT EXISTS `conteudo_cliente` (
     ON UPDATE NO ACTION);
 
 
+
+-- -----------------------------------------------------
+-- Logs_clientes_conteudos
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `logs_clientes_conteudos` (
+  `data` DATETIME NOT NULL,
+  `descricao` VARCHAR(255) NULL,
+  `clientes_id` INT NOT NULL,
+  `conteudo_id` INT NOT NULL,
+  INDEX `fk_logs_clientes_conteudos_clientes1_idx` (`clientes_id` ASC) VISIBLE,
+  INDEX `fk_logs_clientes_conteudos_conteudo1_idx` (`conteudo_id` ASC) VISIBLE,
+  CONSTRAINT `fk_logs_clientes_conteudos_clientes1`
+    FOREIGN KEY (`clientes_id`)
+    REFERENCES `clientes` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_logs_clientes_conteudos_conteudo1`
+    FOREIGN KEY (`conteudo_id`)
+    REFERENCES `conteudo` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
+

@@ -306,7 +306,7 @@ call addPais("EUA");
 
 call addTipoAssinatura("Cartão de débito");
 
-call alterCliente("vin2@hotmail.com","vin3@hotmail.com","Vinici","1995-02-02",false);
+call alterCliente("vin3@hotmail.com","vin12@hotmail.com","Vinici","2006-02-02",false);
 
 call alterPais("Brasil","Brazil");
 
@@ -317,3 +317,6 @@ call removeCliente("vin3231@hotmail.com");
 call removePais("EUA");
 
 call removeTipoAssinatura("Cartão débito mensal");
+
+
+insert into 

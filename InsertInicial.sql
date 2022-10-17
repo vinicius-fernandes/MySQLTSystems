@@ -166,3 +166,27 @@ values
 (10,10,100,7),
 (10,1,50,null);
 
+
+insert into logs_clientes_conteudos(data,descricao,clientes_id,conteudo_id)
+values
+(curdate(),"Associação de conteúdo e cliente",1,1),
+(curdate(),"Associação de conteúdo e cliente",1,2),
+(curdate(),"Associação de conteúdo e cliente",1,3),
+(curdate(),"Associação de conteúdo e cliente",2,1),
+(curdate(),"Associação de conteúdo e cliente",2,2),
+(curdate(),"Associação de conteúdo e cliente",3,3),
+(curdate(),"Associação de conteúdo e cliente",4,3),
+(curdate(),"Associação de conteúdo e cliente",4,4),
+(curdate(),"Associação de conteúdo e cliente",5,4),
+(curdate(),"Associação de conteúdo e cliente",6,5),
+(curdate(),"Associação de conteúdo e cliente",7,6),
+(curdate(),"Associação de conteúdo e cliente",7,7),
+(curdate(),"Associação de conteúdo e cliente",8,8),
+(curdate(),"Associação de conteúdo e cliente",8,9),
+(curdate(),"Associação de conteúdo e cliente",9,9),
+(curdate(),"Associação de conteúdo e cliente",9,10),
+(curdate(),"Associação de conteúdo e cliente",10,10),
+(curdate(),"Associação de conteúdo e cliente",10,1);
+
+
+
