@@ -48,7 +48,8 @@ values
 ("Interstellar",1,10),
 ("Carros",1,10),
 ("Veloses e furiosos",1,12),
-("Corra",1,18);
+("Corra",1,18),
+("Champions League",10,0);
 
 insert into atores_conteudo (Atores_id,conteudo_id)
 values
@@ -71,7 +72,8 @@ values
 (9,5),
 (9,6),
 (10,7),
-(10,8);
+(10,8),
+(1,11);
 
 
 insert into categorias_conteudo (conteudo_id,categorias_id)
@@ -95,7 +97,8 @@ values
 (9,5),
 (9,6),
 (10,7),
-(10,8);
+(10,8),
+(11,7);
 
 
 
